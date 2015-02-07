@@ -1,6 +1,6 @@
 # go-smtp-source
 
-go-smtp-source is a simple replacement written in Go for smtp-source in Postfix distribution.
+go-smtp-source is a simple drop replacement written in Go for smtp-source in Postfix distribution.
 
 ## Motivation
 
