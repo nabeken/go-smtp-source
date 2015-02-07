@@ -39,4 +39,4 @@ go-smtp-source -s 10 -m 100 -tls 127.0.0.1:10025
 
 ## smtp-sink
 
-[smtp-sink(1)](http://www.postfix.org/smtp-sink.1.html) is a good friend for benchmarking {go,}-smtp-source.
+[smtp-sink(1)](http://www.postfix.org/smtp-sink.1.html) is a good friend for benchmarking {go-,}smtp-source.
