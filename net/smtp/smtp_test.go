@@ -11,10 +11,11 @@ import (
 	"crypto/x509"
 	"io"
 	"net"
-	"net/textproto"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/nabeken/go-smtp-source/net/textproto"
 )
 
 type authTest struct {
