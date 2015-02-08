@@ -37,7 +37,7 @@ type Config struct {
 }
 
 func usage(m, def string) string {
-	return fmt.Sprintf("%s [default: %s]", def)
+	return fmt.Sprintf("%s [default: %s]", m, def)
 }
 
 func Parse() error {
