@@ -130,7 +130,7 @@ func (c *Client) SendMail() error {
 }
 
 func main() {
-	if profile := os.Getenv("PPROF_FILE"); profile != "" {
+	if profile := os.Getenv("CPU_PPROF_FILE"); profile != "" {
 		f, err := os.Create(profile)
 		if err != nil {
 			panic(err)
@@ -150,6 +150,15 @@ func main() {
 	go Kick(queue, done)
 	for i := 0; i < config.MessageCount; i++ {
 		<-done
+	}
+
+	if profile := os.Getenv("HEAP_PPROF_FILE"); profile != "" {
+		f, err := os.Create(profile)
+		if err != nil {
+			panic(err)
+		}
+		pprof.WriteHeapProfile(f)
+		f.Close()
 	}
 }
 
