@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/smtp"
 	"os"
+	"runtime/pprof"
 	"time"
 )
 
@@ -129,6 +130,14 @@ func (c *Client) SendMail() error {
 }
 
 func main() {
+	if profile := os.Getenv("PPROF_FILE"); profile != "" {
+		f, err := os.Create(profile)
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 	if err := Parse(); err != nil {
 		panic(err)
 	}
