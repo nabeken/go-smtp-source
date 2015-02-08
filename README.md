@@ -29,31 +29,30 @@ Start sending 10000 messages...
 
 Concurrency: 1
 smtp-source:
-6.99user 13.81system 0:30.88elapsed 67%CPU (0avgtext+0avgdata 2696maxresident)k
-0inputs+0outputs (0major+128minor)pagefaults 0swaps
+6.26user 15.14system 0:31.83elapsed 67%CPU (0avgtext+0avgdata 2536maxresident)k
+0inputs+0outputs (0major+124minor)pagefaults 0swaps
 
 go-smtp-source:
-4.34user 15.27system 0:18.00elapsed 108%CPU (0avgtext+0avgdata 6980maxresident)k
-0inputs+0outputs (0major+335minor)pagefaults 0swaps
+2.93user 14.69system 0:16.55elapsed 106%CPU (0avgtext+0avgdata 3932maxresident)k
+0inputs+0outputs (0major+282minor)pagefaults 0swaps
 -------------------------
 Concurrency: 100
 smtp-source:
-0.50user 2.07system 0:02.58elapsed 99%CPU (0avgtext+0avgdata 3164maxresident)k
-0inputs+0outputs (0major+304minor)pagefaults 0swaps
+0.41user 1.94system 0:02.36elapsed 99%CPU (0avgtext+0avgdata 2844maxresident)k
+0inputs+0outputs (0major+181minor)pagefaults 0swaps
 
 go-smtp-source:
-0.52user 5.51system 0:05.57elapsed 108%CPU (0avgtext+0avgdata 9820maxresident)k
-0inputs+0outputs (0major+1036minor)pagefaults 0swaps
+0.23user 3.89system 0:03.75elapsed 109%CPU (0avgtext+0avgdata 5292maxresident)k
+0inputs+0outputs (0major+631minor)pagefaults 0swaps
 -------------------------
 Concurrency: 1000
 smtp-source:
-0.60user 2.31system 0:02.93elapsed 99%CPU (0avgtext+0avgdata 3028maxresident)k
-0inputs+0outputs (0major+216minor)pagefaults 0swaps
+0.50user 1.93system 0:02.44elapsed 99%CPU (0avgtext+0avgdata 2872maxresident)k
+0inputs+0outputs (0major+194minor)pagefaults 0swaps
 
 go-smtp-source:
-0.58user 4.30system 0:04.45elapsed 109%CPU (0avgtext+0avgdata 31828maxresident)k
-0inputs+0outputs (0major+7125minor)pagefaults 0swaps
--------------------------
+0.37user 4.01system 0:03.91elapsed 111%CPU (0avgtext+0avgdata 12244maxresident)k
+0inputs+0outputs (0major+2401minor)pagefaults 0swaps
 ```
 
 ## Installation
