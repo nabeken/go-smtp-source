@@ -27,7 +27,7 @@ I measured the performance for go-smtp-source and smtp-source against smtp-sink.
 
 ## Installation
 
-Download from [releases](https://github.com/nabeken/docker-cleaner/releases).
+Download from [releases](https://github.com/nabeken/go-smtp-source/releases).
 
 Or
 
