@@ -27,7 +27,11 @@ I measured the performance for go-smtp-source and smtp-source against smtp-sink.
 
 ## Installation
 
-```
+Download from [releases](https://github.com/nabeken/docker-cleaner/releases).
+
+Or
+
+```sh
 go get -u github.com/nabeken/go-smtp-source
 ```
 
@@ -35,7 +39,7 @@ go get -u github.com/nabeken/go-smtp-source
 
 Send 100 messages in 10 concurrency to SMTP server running on 127.0.0.1:10025 over TLS.
 
-```
+```sh
 go-smtp-source -s 10 -m 100 -tls 127.0.0.1:10025
 ```
 
