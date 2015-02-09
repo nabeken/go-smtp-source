@@ -12,9 +12,9 @@ I want to add some feature to smtp-source. I don't want to go with C because we 
 
 go-smtp-source does not providea all features that smtp-source provided but it has some additional feature.
 
-- STARTTLS support
-- Precious time metrics support (smtp-source does not provide elasped time. We need to use `time` with smtp-source.)
-- Clustering support for distributed load testing
+- :heavy_check_mark: STARTTLS support
+- :construction: Precious time metrics support (smtp-source does not provide elasped time. We need to use `time` with smtp-source.)
+- :construction: Clustering support for distributed load testing
 
 See [smtp-source(1)](http://www.postfix.org/smtp-source.1.html) about original smtp-source.
 
