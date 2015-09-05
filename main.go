@@ -33,7 +33,7 @@ type Config struct {
 	Recipient    string
 	MessageCount int
 	Sessions     int
-	MessageSize	 int
+	MessageSize  int
 	UseTLS       bool
 
 	tlsConfig *tls.Config
@@ -46,7 +46,7 @@ func usage(m, def string) string {
 func Parse() error {
 	var (
 		msgcount  = flag.Int("m", 1, usage("specify a number of messages to send.", "1"))
-		msgsize  = flag.Int("l", 1024, usage("specify the size of the body.", "1024"))
+		msgsize   = flag.Int("l", 0, usage("specify the size of the body.", "0"))
 		session   = flag.Int("s", 1, usage("specify a number of cocurrent sessions.", "1"))
 		sender    = flag.String("f", defaultSender, usage("specify a sender address.", defaultSender))
 		recipient = flag.String("t", defaultRecipient, usage("specify a recipient address.", defaultRecipient))
@@ -119,10 +119,17 @@ func (c *Client) SendMail() error {
 	fmt.Fprintf(wc, "Subject: %s\n", defaultSubject)
 	fmt.Fprintf(wc, "Message-Id: <%04x.%04x@%s>\n", myPid, config.MessageCount, myhostname)
 	fmt.Fprintln(wc, "")
-	for i := 1; i < config.MessageSize; i++ {
-		fmt.Fprintf(wc, "X")
-		if i % 80 == 0 {
-			fmt.Fprintf(wc, "\n") 
+
+	if config.MessageSize == 0 {
+		for i := 1; i < 5; i++ {
+			fmt.Fprintf(wc, "La de da de da %d.\n", i)
+		}
+	} else {
+		for i := 1; i < config.MessageSize; i++ {
+			fmt.Fprint(wc, "X")
+			if i%80 == 0 {
+				fmt.Fprint(wc, "\n")
+			}
 		}
 	}
 
