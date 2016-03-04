@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -35,6 +34,7 @@ type Config struct {
 	Sessions     int
 	MessageSize  int
 	UseTLS       bool
+	DontDisc     bool
 
 	tlsConfig *tls.Config
 }
@@ -51,13 +51,15 @@ func Parse() error {
 		sender    = flag.String("f", defaultSender, usage("specify a sender address.", defaultSender))
 		recipient = flag.String("t", defaultRecipient, usage("specify a recipient address.", defaultRecipient))
 		usetls    = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
+		dontdisc  = flag.Bool("d", false, usage("specify if send all messages in one connection.", "false"))
 	)
 
 	flag.Parse()
 
 	host := flag.Arg(0)
 	if host == "" {
-		return errors.New("host is missing")
+		fmt.Fprintf(os.Stderr, "host is missing\n")
+		os.Exit(1)
 	}
 
 	config = &Config{
@@ -68,6 +70,7 @@ func Parse() error {
 		MessageSize:  *msgsize,
 		Sessions:     *session,
 		UseTLS:       *usetls,
+		DontDisc:     *dontdisc,
 
 		tlsConfig: &tls.Config{
 			InsecureSkipVerify: true,
@@ -101,41 +104,50 @@ func (c *Client) SendMail() error {
 			return err
 		}
 	}
-	if err := c.c.Mail(config.Sender); err != nil {
-		return err
-	}
-	if err := c.c.Rcpt(config.Recipient); err != nil {
-		return err
-	}
 
-	wc, err := c.c.Data()
-	if err != nil {
-		return err
-	}
+  for i := 0; i < config.MessageCount ; i++ {
 
-	fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
-	fmt.Fprintf(wc, "To: <%s>\n", config.Recipient)
-	fmt.Fprintf(wc, "Date: %s\n", myDate.Format(time.RFC1123))
-	fmt.Fprintf(wc, "Subject: %s\n", defaultSubject)
-	fmt.Fprintf(wc, "Message-Id: <%04x.%04x@%s>\n", myPid, config.MessageCount, myhostname)
-	fmt.Fprintln(wc, "")
-
-	if config.MessageSize == 0 {
-		for i := 1; i < 5; i++ {
-			fmt.Fprintf(wc, "La de da de da %d.\n", i)
+		if err := c.c.Mail(config.Sender); err != nil {
+			return err
 		}
-	} else {
-		for i := 1; i < config.MessageSize; i++ {
-			fmt.Fprint(wc, "X")
-			if i%80 == 0 {
-				fmt.Fprint(wc, "\n")
+		if err := c.c.Rcpt(config.Recipient); err != nil {
+			return err
+		}
+
+		wc, err := c.c.Data()
+		if err != nil {
+			return err
+		}
+
+		fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
+		fmt.Fprintf(wc, "To: <%s>\n", config.Recipient)
+		fmt.Fprintf(wc, "Date: %s\n", myDate.Format(time.RFC1123))
+		fmt.Fprintf(wc, "Subject: %s\n", defaultSubject)
+		fmt.Fprintf(wc, "Message-Id: <%04x.%04x@%s>\n", myPid, config.MessageCount, myhostname)
+		fmt.Fprintln(wc, "")
+
+		if config.MessageSize == 0 {
+			for i := 1; i < 5; i++ {
+				fmt.Fprintf(wc, "La de da de da %d.\n", i)
+			}
+		} else {
+			for i := 1; i < config.MessageSize; i++ {
+				fmt.Fprint(wc, "X")
+				if i%80 == 0 {
+					fmt.Fprint(wc, "\n")
+				}
 			}
 		}
-	}
 
-	if err := wc.Close(); err != nil {
-		return err
-	}
+		if err := wc.Close(); err != nil {
+			return err
+		}
+
+		if (!config.DontDisc) {
+			break
+		}
+
+  }
 
 	if err := c.c.Quit(); err != nil {
 		return err
@@ -162,8 +174,12 @@ func main() {
 	Launch(queue, done)
 
 	go Kick(queue, done)
+
 	for i := 0; i < config.MessageCount; i++ {
 		<-done
+		if (config.DontDisc) {
+			break
+		}
 	}
 
 	if profile := os.Getenv("HEAP_PPROF_FILE"); profile != "" {
@@ -183,7 +199,11 @@ func Launch(queue chan *Client, done chan struct{}) {
 }
 
 func Kick(queue chan *Client, done chan struct{}) {
-	for i := 0; i < config.MessageCount; i++ {
+	var messageCount = config.MessageCount
+	if (config.DontDisc) {
+		messageCount = 1
+	}
+	for i := 0; i < messageCount; i++ {
 		c, err := Dial(config.Host)
 		if err != nil {
 			log.Print(err)
