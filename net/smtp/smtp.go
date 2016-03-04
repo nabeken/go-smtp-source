@@ -18,7 +18,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/nabeken/go-smtp-source/net/textproto"
+	"../../net/textproto"
 )
 
 // A Client represents a client connection to an SMTP server.

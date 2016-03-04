@@ -10,7 +10,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	"github.com/nabeken/go-smtp-source/net/smtp"
+	"./net/smtp"
 )
 
 var (
