@@ -4,7 +4,7 @@ M=10000
 HOST=${HOST:-sink}
 PORT=${PORT:-10025}
 
-echo "Start sending $M messages... (GOMAXPROCS=${GOMAXPROCS})"
+echo "Start sending $M messages... (GOMAXPROCS=${GOMAXPROCS:-default})"
 echo
 
 for s in 1 100 1000; do
