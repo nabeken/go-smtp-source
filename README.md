@@ -1,6 +1,6 @@
 # go-smtp-source
 
-[![wercker status](https://app.wercker.com/status/0d12a3d5376d3b6488247867269f2302/m "wercker status")](https://app.wercker.com/project/bykey/0d12a3d5376d3b6488247867269f2302)
+[![Build Status](https://travis-ci.org/nabeken/go-smtp-source.svg)](https://travis-ci.org/nabeken/go-smtp-source)
 
 go-smtp-source is a simple drop-in replacement for smtp-source in Postfix distribution written in Go
 
@@ -24,7 +24,9 @@ go-smtp-source should be performant.
 I measured the performance for go-smtp-source and smtp-source against smtp-sink with sending 10000 messages.
 
 ```
-$ ./bench.sh
+GOOS=linux go build -o go-smtp-source-linux-amd64
+docker-compose build
+docker-compose run bench
 Start sending 10000 messages...
 
 Concurrency: 1

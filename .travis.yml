@@ -1,0 +1,25 @@
+language: go
+go: 1.8
+install:
+- go get -v -t ./...
+script:
+- go build ./...
+- go test -v ./...
+before_deploy:
+- go get github.com/laher/goxc
+- goxc -t -bc="freebsd,amd64 linux,amd64 windows,386 windows,amd64 darwin,amd64"
+- goxc -tasks='xc archive' -bc="freebsd,amd64 linux,amd64 windows,386 darwin,amd64"
+  -d .
+deploy:
+  provider: releases
+  api_key:
+    secure: FShfPEhsv8dMMk4bfxi0k6RO8SYM/XF7cu89OJFxce38lAf16h2Yhk+Aj1deRW/xvbpXkhJykUgBhtAO4wUh39jQUbUGUUWOZL+sQYNj2skSdFKc95jwRygaQJ6VVRl6fIHXfQP92pk/otVb/nG+b1ksIso002Ed8zo9hDbbRzc=
+  file:
+    - snapshot/go-smtp-source_darwin_amd64.zip
+    - snapshot/go-smtp-source_freebsd_amd64.zip
+    - snapshot/go-smtp-source_linux_amd64.tar.gz
+    - snapshot/go-smtp-source_windows_386.zip
+    - snapshot/go-smtp-source_windows_amd64.zip
+  on:
+    tags: true
+    repo: nabeken/go-smtp-source
