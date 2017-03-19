@@ -30,7 +30,41 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 )
+
+var (
+	bufioReaderPool sync.Pool
+	bufioWriterPool sync.Pool
+)
+
+func newBufioReader(r io.Reader) *bufio.Reader {
+	if v := bufioReaderPool.Get(); v != nil {
+		br := v.(*bufio.Reader)
+		br.Reset(r)
+		return br
+	}
+	return bufio.NewReader(r)
+}
+
+func putBufioReader(br *bufio.Reader) {
+	br.Reset(nil)
+	bufioReaderPool.Put(br)
+}
+
+func newBufioWriter(w io.Writer) *bufio.Writer {
+	if v := bufioWriterPool.Get(); v != nil {
+		bw := v.(*bufio.Writer)
+		bw.Reset(w)
+		return bw
+	}
+	return bufio.NewWriter(w)
+}
+
+func putBufioWriter(bw *bufio.Writer) {
+	bw.Reset(nil)
+	bufioWriterPool.Put(bw)
+}
 
 // An Error represents a numeric error response from a server.
 type Error struct {
@@ -65,15 +99,18 @@ type Conn struct {
 // NewConn returns a new Conn using conn for I/O.
 func NewConn(conn io.ReadWriteCloser) *Conn {
 	return &Conn{
-		Reader: Reader{R: bufio.NewReader(conn)},
-		Writer: Writer{W: bufio.NewWriter(conn)},
+		Reader: Reader{R: newBufioReader(conn)},
+		Writer: Writer{W: newBufioWriter(conn)},
 		conn:   conn,
 	}
 }
 
 // Close closes the connection.
 func (c *Conn) Close() error {
-	return c.conn.Close()
+	err := c.conn.Close()
+	putBufioReader(c.Reader.R)
+	putBufioWriter(c.Writer.W)
+	return err
 }
 
 // Dial connects to the given address on the given network using net.Dial
