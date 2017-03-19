@@ -1,6 +1,6 @@
 # go-smtp-source
 
-[![wercker status](https://app.wercker.com/status/0d12a3d5376d3b6488247867269f2302/m "wercker status")](https://app.wercker.com/project/bykey/0d12a3d5376d3b6488247867269f2302)
+[![Build Status](https://travis-ci.org/nabeken/go-smtp-source.svg)](https://travis-ci.org/nabeken/go-smtp-source)
 
 go-smtp-source is a simple drop-in replacement for smtp-source in Postfix distribution written in Go
 
