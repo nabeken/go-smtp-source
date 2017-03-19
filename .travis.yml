@@ -7,7 +7,7 @@ script:
 - go test -v ./...
 before_deploy:
 - go get github.com/laher/goxc
-- goxc -tasks='xc archive' -bc="freebsd,amd64 linux,amd64 windows,386 darwin,amd64"
+- goxc -tasks='xc archive' -bc="freebsd,amd64 linux,amd64 windows,386 windows,amd64 darwin,amd64"
   -d .
 deploy:
   provider: releases
