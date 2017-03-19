@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+  sink:
+    image: "nabeken/docker-smtp-sink:latest"
+    volumes:
+      - "/sink"
+    command: [-h, mx.example.com, -m, '100', ':10025', '100']
+  bench:
+    build: "."
+    depends_on:
+      - sink
+    entrypoint: /bin/bash
+    command: /root/bench.sh

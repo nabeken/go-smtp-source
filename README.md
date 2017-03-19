@@ -24,7 +24,9 @@ go-smtp-source should be performant.
 I measured the performance for go-smtp-source and smtp-source against smtp-sink with sending 10000 messages.
 
 ```
-$ ./bench.sh
+GOOS=linux go build -o go-smtp-source-linux-amd64
+docker-compose build
+docker-compose run bench
 Start sending 10000 messages...
 
 Concurrency: 1
