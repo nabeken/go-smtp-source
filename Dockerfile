@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 RUN go get -u github.com/google/gops
+RUN go get -u github.com/kardianos/osext
 
 COPY . $GOPATH/src/github.com/nabeken/go-smtp-source/
 RUN go get -d -v github.com/nabeken/go-smtp-source
