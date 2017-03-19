@@ -4,7 +4,7 @@ M=10000
 HOST=${HOST:-sink}
 PORT=${PORT:-10025}
 
-echo "Start sending $M messages..."
+echo "Start sending $M messages... (GOMAXPROCS=${GOMAXPROCS})"
 echo
 
 for s in 1 100 1000; do
@@ -14,7 +14,7 @@ for s in 1 100 1000; do
 
   echo
   echo "go-smtp-source:"
-  /usr/bin/time go-smtp-source -s $s -m $M ${HOST}:${PORT}
+  /usr/bin/time go-smtp-source -s $s -m $M -resolve-once ${HOST}:${PORT}
 
   echo "-------------------------"
 done

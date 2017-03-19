@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"sync"
 	"time"
@@ -35,7 +36,10 @@ type Config struct {
 	MessageCount int
 	Sessions     int
 	MessageSize  int
-	UseTLS       bool
+
+	// extension
+	UseTLS      bool
+	ResolveOnce bool
 
 	tlsConfig *tls.Config
 }
@@ -51,7 +55,9 @@ func Parse() error {
 		session   = flag.Int("s", 1, usage("specify a number of cocurrent sessions.", "1"))
 		sender    = flag.String("f", defaultSender, usage("specify a sender address.", defaultSender))
 		recipient = flag.String("t", defaultRecipient, usage("specify a recipient address.", defaultRecipient))
-		usetls    = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
+
+		usetls      = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
+		resolveOnce = flag.Bool("resolve-once", false, usage("resolve the hostname only once.", "false"))
 	)
 
 	flag.Parse()
@@ -68,7 +74,9 @@ func Parse() error {
 		MessageCount: *msgcount,
 		MessageSize:  *msgsize,
 		Sessions:     *session,
-		UseTLS:       *usetls,
+
+		UseTLS:      *usetls,
+		ResolveOnce: *resolveOnce,
 
 		tlsConfig: &tls.Config{
 			InsecureSkipVerify: true,
@@ -132,6 +140,20 @@ func main() {
 	}
 	if err := Parse(); err != nil {
 		log.Fatal(err)
+	}
+
+	if config.ResolveOnce {
+		host, port, err := net.SplitHostPort(config.Host)
+		if err != nil {
+			log.Fatal(err)
+		}
+		addrs, err := net.LookupHost(host)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// use first one
+		config.Host = addrs[0] + ":" + port
 	}
 
 	// semaphore for concurrency
