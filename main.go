@@ -142,18 +142,19 @@ func main() {
 		log.Fatal(err)
 	}
 
+	addr, port, err := net.SplitHostPort(config.Host)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if config.ResolveOnce {
-		host, port, err := net.SplitHostPort(config.Host)
-		if err != nil {
-			log.Fatal(err)
-		}
-		addrs, err := net.LookupHost(host)
+		addrs, err := net.LookupHost(addr)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		// use first one
-		config.Host = addrs[0] + ":" + port
+		addr = addrs[0]
 	}
 
 	// semaphore for concurrency
@@ -170,7 +171,21 @@ func main() {
 	clientQueue := make(chan *clientCall, config.Sessions)
 	go func() {
 		for i := 0; i < config.MessageCount; i++ {
-			c, err := smtp.Dial(config.Host)
+			conn, err := net.Dial("tcp", addr+":"+port)
+			if err != nil {
+				clientQueue <- &clientCall{nil, err}
+				continue
+			}
+
+			if tcpConn, ok := conn.(*net.TCPConn); ok {
+				// smtp-source does this so we just follow it
+				if err := tcpConn.SetLinger(0); err != nil {
+					clientQueue <- &clientCall{nil, err}
+					continue
+				}
+			}
+
+			c, err := smtp.NewClient(conn, addr)
 			clientQueue <- &clientCall{c, err}
 		}
 	}()
