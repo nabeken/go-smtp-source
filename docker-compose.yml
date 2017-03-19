@@ -10,5 +10,4 @@ services:
     build: "."
     depends_on:
       - sink
-    entrypoint: /bin/bash
     command: /root/bench.sh

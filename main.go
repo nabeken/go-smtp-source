@@ -6,10 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
-	"runtime/pprof"
+	"sync"
 	"time"
 
+	"github.com/google/gops/agent"
 	"github.com/nabeken/go-smtp-source/net/smtp"
 )
 
@@ -34,7 +36,10 @@ type Config struct {
 	MessageCount int
 	Sessions     int
 	MessageSize  int
-	UseTLS       bool
+
+	// extension
+	UseTLS      bool
+	ResolveOnce bool
 
 	tlsConfig *tls.Config
 }
@@ -50,7 +55,9 @@ func Parse() error {
 		session   = flag.Int("s", 1, usage("specify a number of cocurrent sessions.", "1"))
 		sender    = flag.String("f", defaultSender, usage("specify a sender address.", defaultSender))
 		recipient = flag.String("t", defaultRecipient, usage("specify a recipient address.", defaultRecipient))
-		usetls    = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
+
+		usetls      = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
+		resolveOnce = flag.Bool("resolve-once", false, usage("resolve the hostname only once.", "false"))
 	)
 
 	flag.Parse()
@@ -67,7 +74,9 @@ func Parse() error {
 		MessageCount: *msgcount,
 		MessageSize:  *msgsize,
 		Sessions:     *session,
-		UseTLS:       *usetls,
+
+		UseTLS:      *usetls,
+		ResolveOnce: *resolveOnce,
 
 		tlsConfig: &tls.Config{
 			InsecureSkipVerify: true,
@@ -76,39 +85,24 @@ func Parse() error {
 	return nil
 }
 
-type Client struct {
-	c   *smtp.Client
-	err error
-}
-
-func Dial(addr string) (*Client, error) {
-	c, err := smtp.Dial(addr)
-	if err != nil {
-		return nil, err
-	}
-	return &Client{
-		c: c,
-	}, nil
-}
-
-func (c *Client) SendMail() error {
+func sendMail(c *smtp.Client) error {
 	if config.UseTLS {
-		if err := c.c.StartTLS(config.tlsConfig); err != nil {
+		if err := c.StartTLS(config.tlsConfig); err != nil {
 			return err
 		}
 	} else {
-		if err := c.c.Hello(myhostname); err != nil {
+		if err := c.Hello(myhostname); err != nil {
 			return err
 		}
 	}
-	if err := c.c.Mail(config.Sender); err != nil {
+	if err := c.Mail(config.Sender); err != nil {
 		return err
 	}
-	if err := c.c.Rcpt(config.Recipient); err != nil {
+	if err := c.Rcpt(config.Recipient); err != nil {
 		return err
 	}
 
-	wc, err := c.c.Data()
+	wc, err := c.Data()
 	if err != nil {
 		return err
 	}
@@ -137,66 +131,71 @@ func (c *Client) SendMail() error {
 		return err
 	}
 
-	if err := c.c.Quit(); err != nil {
-		return err
-	}
-	return nil
+	return c.Quit()
 }
 
 func main() {
-	if profile := os.Getenv("CPU_PPROF_FILE"); profile != "" {
-		f, err := os.Create(profile)
-		if err != nil {
-			panic(err)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
+	if err := agent.Listen(nil); err != nil {
+		log.Fatal(err)
 	}
 	if err := Parse(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	queue := make(chan *Client)
-	done := make(chan struct{}, config.MessageCount)
-
-	Launch(queue, done)
-
-	go Kick(queue, done)
-	for i := 0; i < config.MessageCount; i++ {
-		<-done
-	}
-
-	if profile := os.Getenv("HEAP_PPROF_FILE"); profile != "" {
-		f, err := os.Create(profile)
+	if config.ResolveOnce {
+		host, port, err := net.SplitHostPort(config.Host)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
-		pprof.WriteHeapProfile(f)
-		f.Close()
-	}
-}
+		addrs, err := net.LookupHost(host)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-func Launch(queue chan *Client, done chan struct{}) {
+		// use first one
+		config.Host = addrs[0] + ":" + port
+	}
+
+	// semaphore for concurrency
+	sem := make(chan struct{}, config.Sessions)
 	for i := 0; i < config.Sessions; i++ {
-		go Worker(queue, done)
+		sem <- struct{}{}
 	}
-}
 
-func Kick(queue chan *Client, done chan struct{}) {
-	for i := 0; i < config.MessageCount; i++ {
-		c, err := Dial(config.Host)
-		if err != nil {
-			log.Print(err)
-			done <- struct{}{}
-			continue
+	// response for async dial
+	type clientCall struct {
+		c   *smtp.Client
+		err error
+	}
+	clientQueue := make(chan *clientCall, config.Sessions)
+	go func() {
+		for i := 0; i < config.MessageCount; i++ {
+			c, err := smtp.Dial(config.Host)
+			clientQueue <- &clientCall{c, err}
 		}
-		queue <- c
-	}
-}
+	}()
 
-func Worker(queue <-chan *Client, done chan<- struct{}) {
-	for c := range queue {
-		c.SendMail()
-		done <- struct{}{}
+	// wait group for all attempts
+	var wg sync.WaitGroup
+	wg.Add(config.MessageCount)
+
+	for i := 0; i < config.MessageCount; i++ {
+		<-sem
+		go func() {
+			defer func() {
+				sem <- struct{}{}
+				wg.Done()
+			}()
+			cc := <-clientQueue
+			if cc.err != nil {
+				log.Println("unable to connect to the server:", cc.err)
+				return
+			}
+			if err := sendMail(cc.c); err != nil {
+				log.Println("unable to send a mail:", err)
+			}
+		}()
 	}
+
+	wg.Wait()
 }
