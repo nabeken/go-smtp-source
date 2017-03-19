@@ -1,4 +1,4 @@
-// Copyright 2010 The Go Authors.  All rights reserved.
+// Copyright 2010 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -30,41 +30,7 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"sync"
 )
-
-var (
-	bufioReaderPool sync.Pool
-	bufioWriterPool sync.Pool
-)
-
-func newBufioReader(r io.Reader) *bufio.Reader {
-	if v := bufioReaderPool.Get(); v != nil {
-		br := v.(*bufio.Reader)
-		br.Reset(r)
-		return br
-	}
-	return bufio.NewReader(r)
-}
-
-func putBufioReader(br *bufio.Reader) {
-	br.Reset(nil)
-	bufioReaderPool.Put(br)
-}
-
-func newBufioWriter(w io.Writer) *bufio.Writer {
-	if v := bufioWriterPool.Get(); v != nil {
-		bw := v.(*bufio.Writer)
-		bw.Reset(w)
-		return bw
-	}
-	return bufio.NewWriter(w)
-}
-
-func putBufioWriter(bw *bufio.Writer) {
-	bw.Reset(nil)
-	bufioWriterPool.Put(bw)
-}
 
 // An Error represents a numeric error response from a server.
 type Error struct {
@@ -99,18 +65,15 @@ type Conn struct {
 // NewConn returns a new Conn using conn for I/O.
 func NewConn(conn io.ReadWriteCloser) *Conn {
 	return &Conn{
-		Reader: Reader{R: newBufioReader(conn)},
-		Writer: Writer{W: newBufioWriter(conn)},
+		Reader: Reader{R: bufio.NewReader(conn)},
+		Writer: Writer{W: bufio.NewWriter(conn)},
 		conn:   conn,
 	}
 }
 
 // Close closes the connection.
 func (c *Conn) Close() error {
-	err := c.conn.Close()
-	putBufioReader(c.Reader.R)
-	putBufioWriter(c.Writer.W)
-	return err
+	return c.conn.Close()
 }
 
 // Dial connects to the given address on the given network using net.Dial
@@ -124,7 +87,7 @@ func Dial(network, addr string) (*Conn, error) {
 }
 
 // Cmd is a convenience method that sends a command after
-// waiting its turn in the pipeline.  The command text is the
+// waiting its turn in the pipeline. The command text is the
 // result of formatting format with args and appending \r\n.
 // Cmd returns the id of the command, for use with StartResponse and EndResponse.
 //
