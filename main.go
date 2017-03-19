@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime/pprof"
 	"sync"
 	"time"
 
+	"github.com/google/gops/agent"
 	"github.com/nabeken/go-smtp-source/net/smtp"
 )
 
@@ -127,16 +127,11 @@ func sendMail(c *smtp.Client) error {
 }
 
 func main() {
-	if profile := os.Getenv("CPU_PPROF_FILE"); profile != "" {
-		f, err := os.Create(profile)
-		if err != nil {
-			panic(err)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
+	if err := agent.Listen(nil); err != nil {
+		log.Fatal(err)
 	}
 	if err := Parse(); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	// semaphore for concurrency
@@ -181,13 +176,4 @@ func main() {
 	}
 
 	wg.Wait()
-
-	if profile := os.Getenv("HEAP_PPROF_FILE"); profile != "" {
-		f, err := os.Create(profile)
-		if err != nil {
-			panic(err)
-		}
-		pprof.WriteHeapProfile(f)
-		f.Close()
-	}
 }
