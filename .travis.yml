@@ -1,0 +1,24 @@
+language: go
+go: 1.8
+
+install:
+  - go get -v -t ./...
+
+script:
+  - go build ./...
+  - go test -v ./...
+
+before_deploy:
+  - go get github.com/laher/goxc
+  - goxc -t -bc="freebsd,amd64 linux,amd64 windows,amd64 darwin,amd64"
+  - goxc -tasks='xc archive' -bc="freebsd,amd64 linux,amd64 windows,386 darwin,amd64" -d .
+
+deploy:
+  file:
+    - snapshot/go-smtp-source_darwin_amd64.zip
+    - snapshot/go-smtp-source_freebsd_amd64.zip
+    - snapshot/go-smtp-source_linux_amd64.tar.gz
+    - snapshot/go-smtp-source_windows_amd64.zip
+  on:
+    tags: true
+    repo: nabeken/go-check-smtp
