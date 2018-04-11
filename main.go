@@ -145,7 +145,7 @@ func sendMail(c *smtp.Client, idx int) error {
 }
 
 func main() {
-	if err := agent.Listen(nil); err != nil {
+	if err := agent.Listen(agent.Options{}); err != nil {
 		log.Fatal(err)
 	}
 	if err := Parse(); err != nil {
