@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,6 +37,7 @@ type Config struct {
 	MessageCount int
 	Sessions     int
 	MessageSize  int
+	Subject      string
 
 	// extension
 	UseTLS      bool
@@ -55,6 +57,7 @@ func Parse() error {
 		session   = flag.Int("s", 1, usage("specify a number of cocurrent sessions.", "1"))
 		sender    = flag.String("f", defaultSender, usage("specify a sender address.", defaultSender))
 		recipient = flag.String("t", defaultRecipient, usage("specify a recipient address.", defaultRecipient))
+		subject   = flag.String("S", defaultSubject, usage("specify a subject.", defaultSubject))
 
 		usetls      = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
 		resolveOnce = flag.Bool("resolve-once", false, usage("resolve the hostname only once.", "false"))
@@ -74,6 +77,7 @@ func Parse() error {
 		MessageCount: *msgcount,
 		MessageSize:  *msgsize,
 		Sessions:     *session,
+		Subject:      *subject,
 
 		UseTLS:      *usetls,
 		ResolveOnce: *resolveOnce,
@@ -85,7 +89,7 @@ func Parse() error {
 	return nil
 }
 
-func sendMail(c *smtp.Client) error {
+func sendMail(c *smtp.Client, idx int) error {
 	if config.UseTLS {
 		if err := c.StartTLS(config.tlsConfig); err != nil {
 			return err
@@ -110,7 +114,13 @@ func sendMail(c *smtp.Client) error {
 	fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
 	fmt.Fprintf(wc, "To: <%s>\n", config.Recipient)
 	fmt.Fprintf(wc, "Date: %s\n", myDate.Format(time.RFC1123))
-	fmt.Fprintf(wc, "Subject: %s\n", defaultSubject)
+
+	subject := fmt.Sprintf(config.Subject, idx)
+	if subjectIdx := strings.Index(subject, "%!(EXTRA"); subjectIdx >= 0 {
+		fmt.Fprintf(wc, "Subject: %s\n", subject[0:subjectIdx])
+	} else {
+		fmt.Fprintf(wc, "Subject: %s\n", subject)
+	}
 	fmt.Fprintf(wc, "Message-Id: <%04x.%04x@%s>\n", myPid, config.MessageCount, myhostname)
 	fmt.Fprintln(wc, "")
 
@@ -167,26 +177,28 @@ func main() {
 	type clientCall struct {
 		c   *smtp.Client
 		err error
+		idx int
 	}
 	clientQueue := make(chan *clientCall, config.Sessions)
 	go func() {
 		for i := 0; i < config.MessageCount; i++ {
+			idx := i + 1
 			conn, err := net.Dial("tcp", addr+":"+port)
 			if err != nil {
-				clientQueue <- &clientCall{nil, err}
+				clientQueue <- &clientCall{nil, err, idx}
 				continue
 			}
 
 			if tcpConn, ok := conn.(*net.TCPConn); ok {
 				// smtp-source does this so we just follow it
 				if err := tcpConn.SetLinger(0); err != nil {
-					clientQueue <- &clientCall{nil, err}
+					clientQueue <- &clientCall{nil, err, idx}
 					continue
 				}
 			}
 
 			c, err := smtp.NewClient(conn, addr)
-			clientQueue <- &clientCall{c, err}
+			clientQueue <- &clientCall{c, err, idx}
 		}
 	}()
 
@@ -206,7 +218,7 @@ func main() {
 				log.Println("unable to connect to the server:", cc.err)
 				return
 			}
-			if err := sendMail(cc.c); err != nil {
+			if err := sendMail(cc.c, cc.idx); err != nil {
 				log.Println("unable to send a mail:", err)
 			}
 		}()
