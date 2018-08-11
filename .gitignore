@@ -1,1 +1,4 @@
 go-smtp-source-linux-amd64
+go-smtp-source
+vendor
+snapshot
