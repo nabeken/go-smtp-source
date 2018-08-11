@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"flag"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/google/gops/agent"
 	"github.com/nabeken/go-smtp-source/net/smtp"
+	"golang.org/x/time/rate"
 )
 
 var (
@@ -42,6 +44,7 @@ type Config struct {
 	// extension
 	UseTLS      bool
 	ResolveOnce bool
+	QPS         rate.Limit
 
 	tlsConfig *tls.Config
 }
@@ -61,6 +64,8 @@ func Parse() error {
 
 		usetls      = flag.Bool("tls", false, usage("specify if STARTTLS is needed.", "false"))
 		resolveOnce = flag.Bool("resolve-once", false, usage("resolve the hostname only once.", "false"))
+
+		qps = flag.Float64("q", 0, usage("specify a queries per second.", "no rate limit"))
 	)
 
 	flag.Parse()
@@ -81,6 +86,8 @@ func Parse() error {
 
 		UseTLS:      *usetls,
 		ResolveOnce: *resolveOnce,
+
+		QPS: rate.Limit(*qps),
 
 		tlsConfig: &tls.Config{
 			InsecureSkipVerify: true,
@@ -206,6 +213,11 @@ func main() {
 	var wg sync.WaitGroup
 	wg.Add(config.MessageCount)
 
+	limiter := rate.NewLimiter(rate.Inf, 0)
+	if config.QPS > 0 {
+		limiter = rate.NewLimiter(config.QPS, 1)
+	}
+
 	for i := 0; i < config.MessageCount; i++ {
 		<-sem
 		go func() {
@@ -218,6 +230,9 @@ func main() {
 				log.Println("unable to connect to the server:", cc.err)
 				return
 			}
+
+			limiter.Wait(context.TODO())
+
 			if err := sendMail(cc.c, cc.idx); err != nil {
 				log.Println("unable to send a mail:", err)
 			}
