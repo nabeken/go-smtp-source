@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/google/gops/agent"
 	"github.com/nabeken/go-smtp-source/net/smtp"
+	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 )
 
@@ -123,26 +123,26 @@ type transaction struct {
 func sendMail(c *smtp.Client, tx *transaction) error {
 	if config.UseTLS {
 		if err := c.StartTLS(config.tlsConfig); err != nil {
-			return err
+			return errors.Wrap(err, "unable to issue STARTTLS")
 		}
 	} else {
 		if err := c.Hello(myhostname); err != nil {
-			return err
+			return errors.Wrap(err, "unable to say hello")
 		}
 	}
 	if err := c.Mail(config.Sender); err != nil {
-		return err
+		return errors.Wrap(err, "unable to start SMTP transaction")
 	}
 
 	for i := range tx.Recipients {
 		if err := c.Rcpt(tx.Recipients[i]); err != nil {
-			return err
+			return errors.Wrap(err, "unable to issue RCPT")
 		}
 	}
 
 	wc, err := c.Data()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "unable to start DATA")
 	}
 
 	fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
@@ -171,7 +171,7 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 		}
 	}
 
-	return wc.Close()
+	return errors.Wrap(wc.Close(), "unable to commit the SMTP transaction")
 }
 
 func calcNumTx(messageCount, recipientCount int) int {
