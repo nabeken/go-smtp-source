@@ -171,11 +171,7 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 		}
 	}
 
-	if err := wc.Close(); err != nil {
-		return err
-	}
-
-	return c.Quit()
+	return wc.Close()
 }
 
 func calcNumTx(messageCount, recipientCount int) int {
@@ -313,6 +309,10 @@ func main() {
 			limiter.WaitN(context.TODO(), len(cc.tx.Recipients))
 			if err := sendMail(cc.c, cc.tx); err != nil {
 				log.Println("unable to send a mail:", err)
+			}
+
+			if err := cc.c.Quit(); err != nil {
+				log.Println("unable to quit a session:", err)
 			}
 		}()
 	}
