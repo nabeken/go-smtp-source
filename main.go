@@ -156,7 +156,9 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 		return errors.Wrap(err, "unable to start DATA")
 	}
 	if data := tx.Data; len(data) > 0 {
-		fmt.Fprint(wc, data)
+		if _, err := wc.Write(data); err != nil {
+			return errors.Wrap(err, "unable to write preformatted data")
+		}
 	} else {
 		fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
 		fmt.Fprintf(wc, "To: <%s>\n", config.Recipient)
