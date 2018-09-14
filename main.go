@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"net/textproto"
 	"os"
 	"strings"
 	"sync"
@@ -51,6 +55,8 @@ type Config struct {
 	ResolveOnce bool
 	QPS         rate.Limit
 
+	File string
+
 	tlsConfig *tls.Config
 }
 
@@ -79,6 +85,8 @@ func Parse() error {
 		resolveOnce = flag.Bool("resolve-once", false, usage("resolve the hostname only once.", "false"))
 
 		qps = flag.Float64("q", 0, usage("specify a queries per second.", "no rate limit"))
+
+		file = flag.String("F", "", "send a preformatted header and message specified in the file.")
 	)
 
 	flag.Parse()
@@ -107,6 +115,8 @@ func Parse() error {
 
 		QPS: rate.Limit(*qps),
 
+		File: *file,
+
 		tlsConfig: &tls.Config{
 			InsecureSkipVerify: true,
 		},
@@ -118,6 +128,7 @@ type transaction struct {
 	Sender     string
 	Recipients []string
 	TxIdx      int
+	Data       []byte
 }
 
 func sendMail(c *smtp.Client, tx *transaction) error {
@@ -144,29 +155,34 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to start DATA")
 	}
-
-	fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
-	fmt.Fprintf(wc, "To: <%s>\n", config.Recipient)
-	fmt.Fprintf(wc, "Date: %s\n", myDate.Format(time.RFC1123))
-
-	subject := fmt.Sprintf(config.Subject, tx.TxIdx)
-	if subjectIdx := strings.Index(subject, "%!(EXTRA"); subjectIdx >= 0 {
-		fmt.Fprintf(wc, "Subject: %s\n", subject[0:subjectIdx])
-	} else {
-		fmt.Fprintf(wc, "Subject: %s\n", subject)
-	}
-	fmt.Fprintf(wc, "Message-Id: <%04x.%04x@%s>\n", myPid, config.MessageCount, myhostname)
-	fmt.Fprintln(wc, "")
-
-	if config.MessageSize == 0 {
-		for i := 1; i < 5; i++ {
-			fmt.Fprintf(wc, "La de da de da %d.\n", i)
+	if data := tx.Data; len(data) > 0 {
+		if _, err := wc.Write(data); err != nil {
+			return errors.Wrap(err, "unable to write preformatted data")
 		}
 	} else {
-		for i := 1; i < config.MessageSize; i++ {
-			fmt.Fprint(wc, "X")
-			if i%80 == 0 {
-				fmt.Fprint(wc, "\n")
+		fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
+		fmt.Fprintf(wc, "To: <%s>\n", config.Recipient)
+		fmt.Fprintf(wc, "Date: %s\n", myDate.Format(time.RFC1123))
+
+		subject := fmt.Sprintf(config.Subject, tx.TxIdx)
+		if subjectIdx := strings.Index(subject, "%!(EXTRA"); subjectIdx >= 0 {
+			fmt.Fprintf(wc, "Subject: %s\n", subject[0:subjectIdx])
+		} else {
+			fmt.Fprintf(wc, "Subject: %s\n", subject)
+		}
+		fmt.Fprintf(wc, "Message-Id: <%04x.%04x@%s>\n", myPid, config.MessageCount, myhostname)
+		fmt.Fprintln(wc, "")
+
+		if config.MessageSize == 0 {
+			for i := 1; i < 5; i++ {
+				fmt.Fprintf(wc, "La de da de da %d.\n", i)
+			}
+		} else {
+			for i := 1; i < config.MessageSize; i++ {
+				fmt.Fprint(wc, "X")
+				if i%80 == 0 {
+					fmt.Fprint(wc, "\n")
+				}
 			}
 		}
 	}
@@ -198,12 +214,40 @@ func generateRecipients(rcpt string, txidx, recipientCount, nrcpt int) []string 
 	return recipients
 }
 
+func formatData(fn string) ([]byte, error) {
+	f, err := os.Open(fn)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to open '%s'", fn)
+	}
+	defer f.Close()
+
+	buf := &bytes.Buffer{}
+	w := textproto.NewWriter(bufio.NewWriter(buf)).DotWriter()
+	if _, err := io.Copy(w, f); err != nil {
+		return nil, err
+	}
+	if err := w.Close(); err != nil {
+		return nil, errors.Wrap(err, "failed to close")
+	}
+
+	return buf.Bytes(), nil
+}
+
 func main() {
 	if err := agent.Listen(agent.Options{}); err != nil {
 		log.Fatal(err)
 	}
 	if err := Parse(); err != nil {
 		log.Fatal(err)
+	}
+
+	var data []byte
+	if fn := config.File; fn != "" {
+		data_, err := formatData(fn)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data = data_
 	}
 
 	addr, port, err := net.SplitHostPort(config.Host)
@@ -266,6 +310,7 @@ func main() {
 			tx := &transaction{
 				Sender: config.Sender,
 				TxIdx:  txidx,
+				Data:   data,
 			}
 
 			if config.RecipientCount > 1 {
