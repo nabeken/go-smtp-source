@@ -1,6 +1,6 @@
 # go-smtp-source
 
-[![Build Status](https://travis-ci.org/nabeken/go-smtp-source.svg)](https://travis-ci.org/nabeken/go-smtp-source)
+[![Go](https://github.com/nabeken/go-smtp-source/actions/workflows/go.yml/badge.svg)](https://github.com/nabeken/go-smtp-source/actions/workflows/go.yml)
 
 go-smtp-source is a simple drop-in replacement for smtp-source in Postfix distribution written in Go
 
