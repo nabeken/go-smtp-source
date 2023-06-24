@@ -1,4 +1,4 @@
-FROM golang:1.8
+FROM golang:1.20
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -7,10 +7,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       time \
     && rm -rf /var/lib/apt/lists/*
 
-RUN go get -u github.com/google/gops
-RUN go get -u github.com/kardianos/osext
+WORKDIR /usr/src/app
 
-COPY . $GOPATH/src/github.com/nabeken/go-smtp-source/
-RUN go get -d -v github.com/nabeken/go-smtp-source
-RUN go install -v github.com/nabeken/go-smtp-source
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
 COPY bench.sh /root/bench.sh
+
+COPY . .
+RUN go build -v -o /usr/local/bin/go-smtp-source
