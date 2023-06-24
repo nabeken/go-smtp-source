@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/smtp"
 	"net/textproto"
 	"os"
 	"strings"
@@ -17,7 +18,6 @@ import (
 	"time"
 
 	"github.com/google/gops/agent"
-	"github.com/nabeken/go-smtp-source/net/smtp"
 	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 )
