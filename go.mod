@@ -3,12 +3,13 @@ module github.com/nabeken/go-smtp-source
 go 1.20
 
 require (
-	github.com/google/gops v0.3.5
-	github.com/pkg/errors v0.8.0
-	golang.org/x/time v0.0.0-20180412165947-fbb02b2291d2
+	github.com/google/gops v0.3.27
+	github.com/pkg/errors v0.9.1
+	golang.org/x/time v0.3.0
 )
 
 require (
-	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
-	golang.org/x/net v0.0.0-20180811021610-c39426892332 // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
+	golang.org/x/net v0.11.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
 )
