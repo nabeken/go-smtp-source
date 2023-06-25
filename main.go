@@ -206,14 +206,6 @@ func sendMail(c *smtp.Client, initialized bool, tx *transaction) (bool, error) {
 	return initialized, errors.Wrap(wc.Close(), "unable to commit the SMTP transaction")
 }
 
-func calcNumTx(messageCount, recipientCount int) int {
-	n := messageCount / recipientCount
-	if rem := messageCount % recipientCount; rem > 0 {
-		n++
-	}
-	return n
-}
-
 // txidx starts from 1.
 func generateRecipients(rcpt string, txidx, recipientCount, nrcpt int) []string {
 	pos := 1
@@ -330,7 +322,7 @@ func main() {
 		}()
 	}
 
-	ntx := calcNumTx(config.MessageCount, config.RecipientCount)
+	ntx := config.MessageCount
 	txCh := make(chan *transaction, ntx)
 
 	go func() {
@@ -338,13 +330,6 @@ func main() {
 			txidx := i + 1
 
 			nrcpt := config.RecipientCount
-
-			// if we're the last, we do process the remainder
-			if i == (ntx - 1) {
-				if rem := config.MessageCount % config.RecipientCount; rem > 0 {
-					nrcpt = rem
-				}
-			}
 
 			tx := &transaction{
 				Sender: config.Sender,
