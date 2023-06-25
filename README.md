@@ -90,6 +90,71 @@ To confirm the delivery result, you can run `bench_check.sh` instead.
 docker compose build
 docker compose up -d sink
 docker compose run --rm bench /root/bench_check.sh
+Start sending 10000 messages... (GOMAXPROCS=default)
+
+Concurrency: 1
+smtp-source:
+0.54user 5.93system 0:15.28elapsed 42%CPU (0avgtext+0avgdata 5852maxresident)k
+0inputs+0outputs (0major+304minor)pagefaults 0swaps
+OK: got '10000' messages
+
+go-smtp-source:
+0.99user 2.94system 0:04.31elapsed 91%CPU (0avgtext+0avgdata 11436maxresident)k
+0inputs+8outputs (0major+5532minor)pagefaults 0swaps
+OK: got '10000' messages
+
+smtp-source (-d):
+0.29user 2.80system 0:08.33elapsed 37%CPU (0avgtext+0avgdata 5804maxresident)k
+0inputs+0outputs (0major+309minor)pagefaults 0swaps
+OK: got '10000' messages
+
+go-smtp-source (-d):
+1.05user 5.16system 0:09.32elapsed 66%CPU (0avgtext+0avgdata 9964maxresident)k
+0inputs+8outputs (0major+1565minor)pagefaults 0swaps
+OK: got '10000' messages
+-------------------------
+Concurrency: 100
+smtp-source:
+0.43user 2.28system 0:04.28elapsed 63%CPU (0avgtext+0avgdata 6196maxresident)k
+0inputs+0outputs (0major+433minor)pagefaults 0swaps
+OK: got '10000' messages
+
+go-smtp-source:
+0.95user 3.02system 0:04.32elapsed 91%CPU (0avgtext+0avgdata 11360maxresident)k
+0inputs+8outputs (0major+5624minor)pagefaults 0swaps
+OK: got '10000' messages
+
+smtp-source (-d):
+0.33user 1.11system 0:03.05elapsed 47%CPU (0avgtext+0avgdata 6544maxresident)k
+0inputs+0outputs (0major+602minor)pagefaults 0swaps
+OK: got '10000' messages
+
+go-smtp-source (-d):
+0.62user 1.64system 0:02.70elapsed 83%CPU (0avgtext+0avgdata 11556maxresident)k
+0inputs+8outputs (0major+2047minor)pagefaults 0swaps
+OK: got '10000' messages
+-------------------------
+Concurrency: 1000
+smtp-source:
+0.51user 2.96system 1:12.16elapsed 4%CPU (0avgtext+0avgdata 6324maxresident)k
+0inputs+0outputs (0major+719minor)pagefaults 0swaps
+OK: got '10000' messages
+
+go-smtp-source:
+0.99user 2.96system 0:04.32elapsed 91%CPU (0avgtext+0avgdata 11424maxresident)k
+0inputs+8outputs (0major+5805minor)pagefaults 0swaps
+OK: got '10000' messages
+
+smtp-source (-d):
+0.30user 1.33system 0:09.50elapsed 17%CPU (0avgtext+0avgdata 7216maxresident)k
+0inputs+0outputs (0major+634minor)pagefaults 0swaps
+OK: got '10000' messages
+
+go-smtp-source (-d):
+0.60user 1.41system 0:02.48elapsed 81%CPU (0avgtext+0avgdata 11480maxresident)k
+0inputs+8outputs (0major+2045minor)pagefaults 0swaps
+OK: got '10000' messages
+-------------------------
 ```
 
 ## Installation
