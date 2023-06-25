@@ -48,7 +48,8 @@ type Config struct {
 	MessageSize  int
 	Subject      string
 
-	Verbose bool
+	DontDisconnect bool
+	Verbose        bool
 
 	// extension
 	UseTLS      bool
@@ -68,9 +69,11 @@ func Parse() error {
 	var (
 		msgcount = flag.Int("m", 1, usage("specify a number of messages to send.", "1"))
 		msgsize  = flag.Int("l", 0, usage("specify the size of the body.", "0"))
-		session  = flag.Int("s", 1, usage("specify a number of cocurrent sessions.", "1"))
+		session  = flag.Int("s", 1, usage("specify a number of concurrent sessions.", "1"))
 		sender   = flag.String("f", defaultSender, usage("specify a sender address.", defaultSender))
 		subject  = flag.String("S", defaultSubject, usage("specify a subject.", defaultSubject))
+
+		dontDisconnect = flag.Bool("d", false, usage("do not disconnect after sending a message; send the next message over the same connection.", "false"))
 
 		verbose = flag.Bool("v", false, usage("enable verbose mode.", "false"))
 
@@ -108,7 +111,8 @@ func Parse() error {
 		Sessions:     *session,
 		Subject:      *subject,
 
-		Verbose: *verbose,
+		DontDisconnect: *dontDisconnect,
+		Verbose:        *verbose,
 
 		UseTLS:      *usetls,
 		ResolveOnce: *resolveOnce,
@@ -124,6 +128,13 @@ func Parse() error {
 	return nil
 }
 
+type clientCall struct {
+	c   *smtp.Client
+	err error
+
+	initialized bool
+}
+
 type transaction struct {
 	Sender     string
 	Recipients []string
@@ -131,33 +142,38 @@ type transaction struct {
 	Data       []byte
 }
 
-func sendMail(c *smtp.Client, tx *transaction) error {
-	if config.UseTLS {
-		if err := c.StartTLS(config.tlsConfig); err != nil {
-			return errors.Wrap(err, "unable to issue STARTTLS")
+func sendMail(c *smtp.Client, initialized bool, tx *transaction) (bool, error) {
+	if !initialized {
+		if config.UseTLS {
+			if err := c.StartTLS(config.tlsConfig); err != nil {
+				return initialized, errors.Wrap(err, "unable to issue STARTTLS")
+			}
+		} else {
+			if err := c.Hello(myhostname); err != nil {
+				return initialized, errors.Wrap(err, "unable to say hello")
+			}
 		}
-	} else {
-		if err := c.Hello(myhostname); err != nil {
-			return errors.Wrap(err, "unable to say hello")
-		}
+
+		initialized = true
 	}
+
 	if err := c.Mail(config.Sender); err != nil {
-		return errors.Wrap(err, "unable to start SMTP transaction")
+		return initialized, errors.Wrap(err, "unable to start SMTP transaction")
 	}
 
 	for i := range tx.Recipients {
 		if err := c.Rcpt(tx.Recipients[i]); err != nil {
-			return errors.Wrap(err, "unable to issue RCPT")
+			return initialized, errors.Wrap(err, "unable to issue RCPT")
 		}
 	}
 
 	wc, err := c.Data()
 	if err != nil {
-		return errors.Wrap(err, "unable to start DATA")
+		return initialized, errors.Wrap(err, "unable to start DATA")
 	}
 	if data := tx.Data; len(data) > 0 {
 		if _, err := wc.Write(data); err != nil {
-			return errors.Wrap(err, "unable to write preformatted data")
+			return initialized, errors.Wrap(err, "unable to write preformatted data")
 		}
 	} else {
 		fmt.Fprintf(wc, "From: <%s>\n", config.Sender)
@@ -187,7 +203,7 @@ func sendMail(c *smtp.Client, tx *transaction) error {
 		}
 	}
 
-	return errors.Wrap(wc.Close(), "unable to commit the SMTP transaction")
+	return initialized, errors.Wrap(wc.Close(), "unable to commit the SMTP transaction")
 }
 
 func calcNumTx(messageCount, recipientCount int) int {
@@ -265,38 +281,61 @@ func main() {
 		addr = addrs[0]
 	}
 
-	// semaphore for concurrency
-	sem := make(chan struct{}, config.Sessions)
-	for i := 0; i < config.Sessions; i++ {
-		sem <- struct{}{}
+	clientCh := make(chan *clientCall, config.Sessions)
+	clientCtx, clientCancel := context.WithCancel(context.Background())
+
+	clientSessionDone := make(chan struct{})
+
+	if config.DontDisconnect {
+		go func() {
+			defer func() {
+				close(clientSessionDone)
+
+				if config.Verbose {
+					log.Print("clientSession is done")
+				}
+			}()
+
+			for i := 1; i <= config.Sessions; i++ {
+				select {
+				case <-clientCtx.Done():
+					if config.Verbose {
+						log.Print("client ctx is canceled. no longer create a new connection.")
+					}
+
+					return
+				default:
+				}
+
+				if config.Verbose {
+					log.Printf("Opening a SMTP session (%d)...", i)
+				}
+
+				// opening a connection first
+				conn, err := net.Dial("tcp", addr+":"+port)
+				if err != nil {
+					log.Fatalf("opening a SMTP session: %s", err)
+				}
+
+				if tcpConn, ok := conn.(*net.TCPConn); ok {
+					// smtp-source does this so we just follow it
+					if err := tcpConn.SetLinger(0); err != nil {
+						log.Fatalf("setting linger to SMTP session (%d)...", i)
+					}
+				}
+
+				sc, err := smtp.NewClient(conn, addr)
+				clientCh <- &clientCall{sc, nil, false}
+			}
+		}()
 	}
 
-	// response for async dial
-	type clientCall struct {
-		c   *smtp.Client
-		err error
-		tx  *transaction
-	}
-
-	clientQueue := make(chan *clientCall, config.Sessions)
 	ntx := calcNumTx(config.MessageCount, config.RecipientCount)
+	txCh := make(chan *transaction, ntx)
 
 	go func() {
 		for i := 0; i < ntx; i++ {
 			txidx := i + 1
-			conn, err := net.Dial("tcp", addr+":"+port)
-			if err != nil {
-				clientQueue <- &clientCall{nil, err, nil}
-				continue
-			}
-
-			if tcpConn, ok := conn.(*net.TCPConn); ok {
-				// smtp-source does this so we just follow it
-				if err := tcpConn.SetLinger(0); err != nil {
-					clientQueue <- &clientCall{nil, err, nil}
-					continue
-				}
-			}
 
 			nrcpt := config.RecipientCount
 
@@ -323,8 +362,30 @@ func main() {
 				log.Printf("ntx:%d i:%d txidx:%d nrcpt:%d recipients:%v", ntx, i, txidx, nrcpt, tx.Recipients)
 			}
 
-			c, err := smtp.NewClient(conn, addr)
-			clientQueue <- &clientCall{c, err, tx}
+			if !config.DontDisconnect {
+				if config.Verbose {
+					log.Printf("Opening a SMTP session (%d)...", txidx)
+				}
+
+				conn, err := net.Dial("tcp", addr+":"+port)
+				if err != nil {
+					clientCh <- &clientCall{nil, err, false}
+					continue
+				}
+
+				if tcpConn, ok := conn.(*net.TCPConn); ok {
+					// smtp-source does this so we just follow it
+					if err := tcpConn.SetLinger(0); err != nil {
+						clientCh <- &clientCall{nil, err, false}
+						continue
+					}
+				}
+
+				c, err := smtp.NewClient(conn, addr)
+				clientCh <- &clientCall{c, err, false}
+			}
+
+			txCh <- tx
 		}
 	}()
 
@@ -338,29 +399,95 @@ func main() {
 	}
 
 	for i := 0; i < ntx; i++ {
-		<-sem
-		go func() {
+		cc := <-clientCh
+
+		go func(cc *clientCall, txidx int) {
 			defer func() {
-				sem <- struct{}{}
+				if config.DontDisconnect {
+					clientCh <- cc
+				}
 				wg.Done()
 			}()
 
-			cc := <-clientQueue
 			if cc.err != nil {
 				log.Println("unable to connect to the server:", cc.err)
 				return
 			}
 
-			limiter.WaitN(context.TODO(), len(cc.tx.Recipients))
-			if err := sendMail(cc.c, cc.tx); err != nil {
-				log.Println("unable to send a mail:", err)
+			tx := <-txCh
+
+			limiter.WaitN(context.TODO(), len(tx.Recipients))
+			initialized, err := sendMail(cc.c, cc.initialized, tx)
+			if err != nil {
+				log.Fatal("unable to send a mail:", err)
 			}
 
-			if err := cc.c.Quit(); err != nil {
-				log.Println("unable to quit a session:", err)
+			cc.initialized = initialized
+
+			if !config.DontDisconnect {
+				if err := cc.c.Quit(); err != nil {
+					log.Println("unable to quit a session:", err)
+				}
+
+				if config.Verbose {
+					log.Printf("The SMTP session (%d) has been closed.", txidx+1)
+				}
 			}
-		}()
+		}(cc, i)
+	}
+
+	if config.Verbose {
+		log.Printf("Waiting for the messages to be sent....")
 	}
 
 	wg.Wait()
+	clientCancel()
+
+	if config.Verbose {
+		log.Printf("Client opening session context has been canceled")
+	}
+
+	clientCloseDone := make(chan struct{})
+
+	if config.DontDisconnect {
+		go func() {
+			defer func() {
+				close(clientCloseDone)
+			}()
+
+			if config.Verbose {
+				log.Print("Closing all the SMTP sessions...")
+			}
+
+			i := 1
+			for cc := range clientCh {
+				if err := cc.c.Quit(); err != nil {
+					log.Fatal("unable to quit a session:", err)
+				}
+
+				if config.Verbose {
+					log.Printf("The SMTP session (%d) has been closed.", i)
+				}
+
+				i++
+			}
+		}()
+
+		if config.Verbose {
+			log.Print("Waiting for the client session is done...")
+		}
+
+		<-clientSessionDone
+		close(clientCh)
+
+		if config.Verbose {
+			log.Print("Waiting for all the sessions are closed...")
+		}
+
+		<-clientCloseDone
+
+		if config.Verbose {
+			log.Print("All the sessions has been closed.")
+		}
+	}
 }

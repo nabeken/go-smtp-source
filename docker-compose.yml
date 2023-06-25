@@ -5,7 +5,9 @@ services:
     image: "ghcr.io/nabeken/docker-smtp-sink:latest"
     volumes:
       - "/sink"
-    command: [-h, mx.example.com, -m, '100', ':10025', '100']
+    command: [-v, -h, mx.example.com, -m, '100', ':10025', '100']
+    ports:
+      - "10025:10025"
   bench:
     build: "."
     depends_on:
