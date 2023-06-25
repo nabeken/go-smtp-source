@@ -12,7 +12,8 @@ check() {
 }
 
 reset_dump() {
-  rm -f "/sink/dump"
+  #rm -f "/sink/dump"
+  :
 }
 
 set -eo pipefail
