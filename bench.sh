@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+set -eo pipefail
+
 M=10000
 
 HOST=${HOST:-sink}
