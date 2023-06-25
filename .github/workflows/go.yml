@@ -25,3 +25,8 @@ jobs:
 
     - name: Test
       run: go test -v -cover ./...
+
+    - name: Bench
+      run: |
+        docker compose build
+        docker compose run --rm bench /root/bench_check.sh
