@@ -12,7 +12,8 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY bench.sh /root/bench.sh
-
 COPY . .
 RUN go build -v -o /usr/local/bin/go-smtp-source
+
+COPY bench.sh /root/bench.sh
+COPY bench_check.sh /root/bench_check.sh
