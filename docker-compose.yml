@@ -3,13 +3,26 @@ version: '3'
 services:
   sink:
     image: "ghcr.io/nabeken/docker-smtp-sink:latest"
-    volumes:
-      - "/sink"
     command: [-v, -h, mx.example.com, -m, '100', ':10025', '100']
     ports:
       - "10025:10025"
+
+  sink_check:
+    image: "ghcr.io/nabeken/docker-smtp-sink:latest"
+    volumes:
+      - "sink:/sink"
+    command: [-D, /sink/dump, -v, -h, mx.example.com, -m, '100', ':10026', '100']
+    ports:
+      - "10026:10026"
+
   bench:
     build: "."
+    volumes:
+      - "sink:/sink"
     depends_on:
       - sink
+      - sink_check
     command: /root/bench.sh
+
+volumes:
+  sink:
