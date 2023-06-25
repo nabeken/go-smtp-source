@@ -26,7 +26,16 @@ jobs:
     - name: Test
       run: go test -v -cover ./...
 
-    - name: Bench
+  bench:
+    name: Bench
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v3
+
+    - name: Run bench
       run: |
         docker compose build
         docker compose run --rm bench /root/bench_check.sh
+
