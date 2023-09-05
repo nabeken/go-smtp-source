@@ -25,7 +25,7 @@ jobs:
       uses: actions/checkout@3df4ab11eba7bda6032a0b82a6bb43b11571feac # v4
 
     - name: Run GoReleaser
-      uses: goreleaser/goreleaser-action@3fa32b8bb5620a2c1afe798654bbad59f9da4906 # v4
+      uses: goreleaser/goreleaser-action@5fdedb94abba051217030cc86d4523cf3f02243d # v4
       with:
         version: latest
         args: release --rm-dist
