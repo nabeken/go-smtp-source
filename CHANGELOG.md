@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.7.2](https://github.com/nabeken/go-smtp-source/compare/v0.7.1...v0.7.2) (2024-07-16)
+
+
+### Bug Fixes
+
+* **deps:** pin googleapis/release-please-action action to f3969c0 ([27368af](https://github.com/nabeken/go-smtp-source/commit/27368af6c258ec9ca1d96ce719c6ef7da4ba659c))
+* **deps:** update actions/checkout digest to 692973e ([21a80f8](https://github.com/nabeken/go-smtp-source/commit/21a80f82e7e68fae846193e1f2d94a1228a78320))
+* **deps:** update actions/checkout digest to a5ac7e5 ([258c181](https://github.com/nabeken/go-smtp-source/commit/258c181fdc3c3a58d187ed6db040948cc4389ff8))
+* **deps:** update actions/setup-go digest to 0a12ed9 ([e7ce898](https://github.com/nabeken/go-smtp-source/commit/e7ce8986ea6b2bd53ce0e45050a5e5d67d4763f8))
+* **deps:** update actions/setup-go digest to cdcb360 ([b5b5dfc](https://github.com/nabeken/go-smtp-source/commit/b5b5dfc02bf3b986f807e940198de3e16f0e0fa2))
+* **deps:** update dependency golang to v1.22.3 ([590978a](https://github.com/nabeken/go-smtp-source/commit/590978a36cadfe483b4cf56e07bbd69a1ab3b700))
+* **deps:** update dependency golang to v1.22.4 ([82a710e](https://github.com/nabeken/go-smtp-source/commit/82a710eaa341101f366744838ff15fe8ef32503e))
+* **deps:** update dependency golang to v1.22.5 ([c62439e](https://github.com/nabeken/go-smtp-source/commit/c62439e5fbbea35e8b6d973c52309237ed6b3f20))
+* **deps:** update google-github-actions/release-please-action digest to e4dc86b ([27d5357](https://github.com/nabeken/go-smtp-source/commit/27d53573a37e1003531abf5e524e5188ca2b5eb6))
+* **deps:** update googleapis/release-please-action digest to 7987652 ([bc5e5c4](https://github.com/nabeken/go-smtp-source/commit/bc5e5c4030f4b907429a68eb9d82fca077b9f8cc))
+* **deps:** update goreleaser/goreleaser-action action to v6 ([bfcfd94](https://github.com/nabeken/go-smtp-source/commit/bfcfd9421d855828bfa894bed6dc3906973b5c33))
+* **deps:** update goreleaser/goreleaser-action digest to 5742e2a ([4452615](https://github.com/nabeken/go-smtp-source/commit/4452615400b384f9482f708bb7581fc364bc8e34))
+* **deps:** update nabeken/go-github-apps digest to ad9874f ([f8f1c79](https://github.com/nabeken/go-smtp-source/commit/f8f1c79efd01ffaac55e800034162ee07c91d202))
+
 ## [0.7.1](https://github.com/nabeken/go-smtp-source/compare/v0.7.0...v0.7.1) (2024-04-29)
 
 
