@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/nabeken/go-smtp-source/compare/v0.7.2...v0.7.3) (2024-07-20)
+
+
+### Bug Fixes
+
+* **deps:** update nabeken/go-github-apps digest to afd4a1d ([ef33d12](https://github.com/nabeken/go-smtp-source/commit/ef33d12c8d87b18d7e56340be0997933f8f9f0fb))
+
 ## [0.7.2](https://github.com/nabeken/go-smtp-source/compare/v0.7.1...v0.7.2) (2024-07-16)
 
 
