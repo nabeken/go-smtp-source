@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.3](https://github.com/nabeken/go-smtp-source/compare/v0.7.2...v0.7.3) (2024-10-07)
+
+
+### Bug Fixes
+
+* **deps:** pin actions/create-github-app-token action to 31c86eb ([339494d](https://github.com/nabeken/go-smtp-source/commit/339494d6820f883a9a187526c4c70b1b85c8ad79))
+* **deps:** update actions/checkout digest to eef6144 ([eeea04e](https://github.com/nabeken/go-smtp-source/commit/eeea04e17110796e532cd7c59c2b088125a3a4e8))
+* **deps:** update actions/create-github-app-token digest to 3378cda ([183458e](https://github.com/nabeken/go-smtp-source/commit/183458e128fd61eb8324e8498a9fd300ce852bbb))
+* **deps:** update actions/create-github-app-token digest to 5d869da ([e536a37](https://github.com/nabeken/go-smtp-source/commit/e536a37e9fcbbd045623be5f1373c8b739365aa6))
+* **deps:** update dependency golang to v1.23.1 ([1a1ee7d](https://github.com/nabeken/go-smtp-source/commit/1a1ee7d8e4ecfd4f2c8d148b723fb80b7cdf0401))
+* **deps:** update dependency golang to v1.23.2 ([c13bef9](https://github.com/nabeken/go-smtp-source/commit/c13bef9cfcec9e4bd956c6103ff55535c9fd3b69))
+* **deps:** update go ([699c897](https://github.com/nabeken/go-smtp-source/commit/699c897907527c3f8c1835113115e91abdc38bc5))
+* **deps:** update go ([f562f70](https://github.com/nabeken/go-smtp-source/commit/f562f7003d5f3b973a21944ad11a85c21a71ea63))
+* **deps:** update module golang.org/x/time to v0.7.0 ([b71eef1](https://github.com/nabeken/go-smtp-source/commit/b71eef1a020f84dc7abb0f2b6b179c8096764675))
+* **deps:** update nabeken/go-github-apps digest to afd4a1d ([ef33d12](https://github.com/nabeken/go-smtp-source/commit/ef33d12c8d87b18d7e56340be0997933f8f9f0fb))
+
 ## [0.7.2](https://github.com/nabeken/go-smtp-source/compare/v0.7.1...v0.7.2) (2024-07-16)
 
 
