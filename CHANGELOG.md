@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.5](https://github.com/nabeken/go-smtp-source/compare/v0.7.4...v0.7.5) (2025-02-15)
+
+
+### Bug Fixes
+
+* **deps:** update actions/create-github-app-token digest to 0d56448 ([#105](https://github.com/nabeken/go-smtp-source/issues/105)) ([8342085](https://github.com/nabeken/go-smtp-source/commit/834208585fb22682d3ae92d0817fe3ab67a667a7))
+* **deps:** update goreleaser/goreleaser-action digest to 90a3faa ([ac61e5d](https://github.com/nabeken/go-smtp-source/commit/ac61e5da50a8d09a6a6e877f9791b7a87ade8946))
+
 ## [0.7.4](https://github.com/nabeken/go-smtp-source/compare/v0.7.3...v0.7.4) (2025-02-10)
 
 
