@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.5](https://github.com/nabeken/go-smtp-source/compare/v0.7.4...v0.7.5) (2025-03-08)
+
+
+### Bug Fixes
+
+* **deps:** update actions/create-github-app-token digest to 0d56448 ([#105](https://github.com/nabeken/go-smtp-source/issues/105)) ([8342085](https://github.com/nabeken/go-smtp-source/commit/834208585fb22682d3ae92d0817fe3ab67a667a7))
+* **deps:** update actions/create-github-app-token digest to 21cfef2 ([#106](https://github.com/nabeken/go-smtp-source/issues/106)) ([3023a0a](https://github.com/nabeken/go-smtp-source/commit/3023a0ac254353f6bc2dcec0950497ec1edc885c))
+* **deps:** update dependency golang ([d0479ce](https://github.com/nabeken/go-smtp-source/commit/d0479ce6ab0e1f305e26c278f6b755769733ea5f))
+* **deps:** update dependency golang ([199c3c3](https://github.com/nabeken/go-smtp-source/commit/199c3c32b4207e923e8c2a3e3ba7a2c415483bb5))
+* **deps:** update googleapis/release-please-action digest to 26ac09b ([#108](https://github.com/nabeken/go-smtp-source/issues/108)) ([029f63c](https://github.com/nabeken/go-smtp-source/commit/029f63cbdeb47d9ff737a2fcaf20d11cfafd2bd6))
+* **deps:** update googleapis/release-please-action digest to a02a34c ([#109](https://github.com/nabeken/go-smtp-source/issues/109)) ([88d717b](https://github.com/nabeken/go-smtp-source/commit/88d717b233bc312b6e1ecae21ebdcf98647b4383))
+* **deps:** update goreleaser/goreleaser-action digest to 90a3faa ([c3b4b20](https://github.com/nabeken/go-smtp-source/commit/c3b4b209c083dc5cb5a2efe20ebc711737d5e779))
+* **deps:** update goreleaser/goreleaser-action digest to 90a3faa ([ac61e5d](https://github.com/nabeken/go-smtp-source/commit/ac61e5da50a8d09a6a6e877f9791b7a87ade8946))
+* **deps:** update module golang.org/x/time to v0.11.0 ([b1ebd93](https://github.com/nabeken/go-smtp-source/commit/b1ebd9323c31841566e37c0922b01b58f7b64f13))
+* **deps:** update module golang.org/x/time to v0.11.0 ([4d88b21](https://github.com/nabeken/go-smtp-source/commit/4d88b2137c2a71403ec542da28da1e7b174c27c4))
+
 ## [0.7.4](https://github.com/nabeken/go-smtp-source/compare/v0.7.3...v0.7.4) (2025-02-10)
 
 
