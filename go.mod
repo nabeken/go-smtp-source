@@ -2,7 +2,7 @@ module github.com/nabeken/go-smtp-source
 
 go 1.23.0
 
-toolchain go1.25.0
+toolchain go1.25.1
 
 require (
 	github.com/google/gops v0.3.28
