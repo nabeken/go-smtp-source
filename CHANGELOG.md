@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.7.7](https://github.com/nabeken/go-smtp-source/compare/v0.7.6...v0.7.7) (2025-09-05)
+
+
+### Bug Fixes
+
+* **deps:** update actions/setup-go action to v6 ([#143](https://github.com/nabeken/go-smtp-source/issues/143)) ([063f5e0](https://github.com/nabeken/go-smtp-source/commit/063f5e002125bbd4e82a04dd47f58dd20929a432))
+* **deps:** update dependency go to v1.25.1 ([#140](https://github.com/nabeken/go-smtp-source/issues/140)) ([9e4f0dd](https://github.com/nabeken/go-smtp-source/commit/9e4f0ddccedb916fe1bb5e5bbf63458c29c5d05e))
+* **deps:** update dependency golang to v1.25.1 ([#141](https://github.com/nabeken/go-smtp-source/issues/141)) ([aa97317](https://github.com/nabeken/go-smtp-source/commit/aa9731718e0afcbba7904625961b22476dcbbb57))
+
 ## [0.7.6](https://github.com/nabeken/go-smtp-source/compare/v0.7.5...v0.7.6) (2025-08-27)
 
 
